@@ -10,18 +10,20 @@ def draw_cable_footprint_matrix(ox, oy, x_offset, y_offset, num_rows, num_cols, 
     for col_counter in range(num_cols):
         draw_rectangle((col_counter * x_offset) + 3.54 - channel_width/2, -2.60, channel_width, (num_rows - 1) * y_offset, dxf)
 
-def draw_key_footprint(ox, oy, dxf):
+def draw_key_footprint(ox, oy, dxf, larger_holes=False):
     dxf.add_circle((0 + ox, 0 + oy), radius=2)
     dxf.add_circle((-5.08 + ox, 0 + oy), radius=0.85)
     dxf.add_circle((5.08 + ox, 0 + oy), radius=0.85)
 
-    # Need to adjust these to fit where the pins are. or make them matching ovals
-    dxf.add_circle((2.54 + ox, -5.08 + oy), radius=0.75)
-    dxf.add_circle((-3.54 + ox, -2.60 + oy), radius=0.75)
+    if larger_holes:
+        # Add wider circle around pads for engraving
+        dxf.add_circle((2.54 + ox, -5.08 + oy), radius=1.25)
+        dxf.add_circle((-3.54 + ox, -2.60 + oy), radius=1.25)
+    else:
+        # Need to adjust these to fit where the pins are. or make them matching ovals
+        dxf.add_circle((2.54 + ox, -5.08 + oy), radius=0.75)
+        dxf.add_circle((-3.54 + ox, -2.60 + oy), radius=0.75)
 
-    # Add wider circle around pads for engraving
-    dxf.add_circle((2.54 + ox, -5.08 + oy), radius=1.25)
-    dxf.add_circle((-3.54 + ox, -2.60 + oy), radius=1.25)
 
 
 
@@ -33,29 +35,37 @@ def draw_rectangle(ox, oy, x, y, dxf):
 
 
 
-def draw_matrix():
+def draw_matrix(columns, rows):
     with r12writer("test_footprint.dxf") as dxf:
-        x_offset = 15.65
-        y_offset = 15.85
-        for x,y in [(0*x_offset,0*y_offset),(1*x_offset,0*y_offset),(2*x_offset,0*y_offset),
-                    (0*x_offset,1*y_offset),(1*x_offset,1*y_offset),(2*x_offset,1*y_offset),
-                    (0*x_offset,2*y_offset),(1*x_offset,2*y_offset),(2*x_offset,2*y_offset),
-                    ]:
-            draw_key_footprint(x, y, dxf)
-        draw_rectangle(-x_offset/2,-y_offset/2,x_offset*3, y_offset*3,dxf)
+        x_offset = 15.75
+        y_offset = 15.95
+        matrix = [[(x * x_offset, y * y_offset) for x in range(columns)] for y in range(rows)]
+        for row in matrix:
+            for x,y in row:
+                draw_key_footprint(x, y, dxf)
+        draw_rectangle(-x_offset/2,-y_offset/2,x_offset*columns, y_offset*rows,dxf)
+
+    with r12writer("test_bigger_footprint.dxf") as dxf:
+        x_offset = 15.75
+        y_offset = 15.95
+        matrix = [[(x * x_offset, y * y_offset) for x in range(columns)] for y in range(rows)]
+        for row in matrix:
+            for x,y in row:
+                draw_key_footprint(x, y, dxf, larger_holes=True)
+        draw_rectangle(-x_offset/2,-y_offset/2,x_offset*columns, y_offset*rows,dxf)
 
         # draw_cable_footprint_matrix(-x_offset/2, -y_offset/2, x_offset, y_offset, 3, 3, dxf)
 
 def draw_single():
-    with r12writer("test_footprint.dxf") as dxf:
+    with r12writer("test_footprint2.dxf") as dxf:
         x_offset = 15.65
         y_offset = 15.85
         draw_key_footprint(x_offset/2, y_offset/2, dxf)
         draw_rectangle(0, 0, x_offset, y_offset, dxf)
 
 
-draw_single()
-#draw_matrix()
+#draw_single()
+draw_matrix(3,3)
 
 
   #(pad "" np_thru_hole circle (at 0 0) (size 3.9878 3.9878) (drill 3.9878) (layers *.Cu *.Mask))
