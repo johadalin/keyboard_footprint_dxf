@@ -33,15 +33,6 @@ def draw_rectangle(ox, oy, x, y, dxf):
 
 
 def draw_matrix(columns, rows):
-    with r12writer("test_footprint.dxf") as dxf:
-        x_offset = 15.75
-        y_offset = 15.95
-        matrix = [[(x * x_offset, y * y_offset) for x in range(columns)] for y in range(rows)]
-        for row in matrix:
-            for x,y in row:
-                draw_key_footprint(x, y, dxf, larger_holes=False)
-        draw_rectangle(-x_offset/2,-y_offset/2,x_offset*columns, y_offset*rows,dxf)
-
     with r12writer("test_bigger_footprint.dxf") as dxf:
         x_offset = 15.75
         y_offset = 15.95
@@ -52,6 +43,7 @@ def draw_matrix(columns, rows):
         draw_rectangle(-x_offset/2,-y_offset/2,x_offset*columns, y_offset*rows,dxf)
 
         draw_cable_footprint_matrix(-x_offset/2, -y_offset/2, x_offset, y_offset, 3, 3, dxf)
+
 
 def draw_single():
     with r12writer("test_footprint2.dxf") as dxf:
