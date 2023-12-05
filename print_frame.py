@@ -14,7 +14,7 @@ class Point:
         self.x = x
         self.y = y
 
-    def __str__(self):
+    def __repr__(self):
         return f"({self.x}, {self.y})"
     
     def copy_and_add_additional_offset(self, additional_offset: 'Point'):
@@ -29,7 +29,7 @@ class Circle:
         self.radius = radius
         self.centre_offset = offset
     
-    def __str__(self):
+    def __repr__(self):
         return f"Circle(radius: {self.radius}, centre: {self.centre_offset})"
     
     def draw_dxf(self, dxf):
@@ -46,7 +46,7 @@ class RectangleDimensions:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-    def __str__(self):
+    def __repr__(self):
         return f"({self.width} x {self.height})"
 
 class Rectangle():
@@ -56,8 +56,8 @@ class Rectangle():
         self.rectangle_dimensions = rectangle_dimensions
         self.corners = self.find_corners()
 
-    def __str__(self):
-        return f"Rectangle({self.rectangle_dimensions}, offset: {self.offset},\n  corners: {self.corners})"
+    def __repr__(self):
+        return f"Rectangle({self.rectangle_dimensions}, offset: {self.offset}, corners: {self.corners})"
     
     def find_corners(self):
         corner_one= self.offset
@@ -86,7 +86,7 @@ class Line:
         self.start = start
         self.end = end
     
-    def __str__(self):
+    def __repr__(self):
             return f"Line({self.start} to {self.end})"
 
     def draw_dxf(self, dxf):
@@ -229,6 +229,7 @@ def main():
         # Create a flat list of shapes (not split into layers, with each shape offset by the appropriate amount for its layer)
         for shape in layer:
             printing_frame.append(shape.copy_and_add_additional_offset(offset))
+            print(shape)
     # Iterate through the list of shapes, writing them to file
     with r12writer(file_name) as dxf:
         for shape in printing_frame:
