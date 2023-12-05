@@ -16,10 +16,10 @@ class Point:
 
     def __repr__(self):
         return f"({self.x}, {self.y})"
-    
+
     def copy_and_add_additional_offset(self, additional_offset: 'Point'):
         return Point(self.x + additional_offset.x, self.y + additional_offset.y)
-    
+
     def to_tuple(self):
         return (self.x, self.y)
 
@@ -28,20 +28,20 @@ class Circle:
     def __init__(self, radius, offset: Point):
         self.radius = radius
         self.centre_offset = offset
-    
+
     def __repr__(self):
         return f"Circle(radius: {self.radius}, centre: {self.centre_offset})"
-    
+
     def draw_dxf(self, dxf):
         dxf.add_circle(self.centre_offset.to_tuple(), radius=self.radius)
-    
+
     def copy_and_add_additional_offset(self, additional_offset: 'Point'):
         return Circle(radius=self.radius, offset=self.centre_offset.copy_and_add_additional_offset(additional_offset))
-    
+
     def max_x(self):
         return self.centre_offset.x + self.radius
 
-        
+
 class RectangleDimensions:
     def __init__(self, width, height):
         self.width = width
@@ -50,15 +50,15 @@ class RectangleDimensions:
         return f"({self.width} x {self.height})"
 
 class Rectangle():
-    #  Given the height and width of the rectangle, and the offfset of the bottom left corner
+    #  Given the height and width of the rectangle, and the offset of the bottom left corner
     def __init__(self, rectangle_dimensions: RectangleDimensions, offset: Point):
-        self.offset = offset      
+        self.offset = offset
         self.rectangle_dimensions = rectangle_dimensions
         self.corners = self.find_corners()
 
     def __repr__(self):
         return f"Rectangle({self.rectangle_dimensions}, offset: {self.offset}, corners: {self.corners})"
-    
+
     def find_corners(self):
         corner_one= self.offset
         corner_two = Point(self.offset.x, (self.offset.y + self.rectangle_dimensions.height))
@@ -77,7 +77,7 @@ class Rectangle():
         for corner in self.corners:
             x_values.append(corner.x)
         return max(x_values)
-    
+
     def copy_and_add_additional_offset(self, additional_offset: Point):
         return Rectangle(self.rectangle_dimensions, self.offset.copy_and_add_additional_offset(additional_offset))
 
@@ -85,16 +85,16 @@ class Line:
     def __init__(self, start: Point, end: Point):
         self.start = start
         self.end = end
-    
+
     def __repr__(self):
             return f"Line({self.start} to {self.end})"
 
     def draw_dxf(self, dxf):
         dxf.add_line(self.start.to_tuple(), self.end.to_tuple())
-    
+
     def max_x(self):
         return max(self.start.x, self.end.x)
-    
+
     def copy_and_add_additional_offset(self, additional_offset: Point):
         return Line(self.start.copy_and_add_additional_offset(additional_offset),
              self.end.copy_and_add_additional_offset(additional_offset))
@@ -108,19 +108,20 @@ class RealWorldObjects:
         self.lino = RectangleDimensions(width=inches_to_cm(lino_width_inches), height=inches_to_cm(lino_height_inches))
 
         # The rectangle that represents the paper I'll be printing onto.
-        # It is determined by the size of the lino print to go in it, and the 
+        # It is determined by the size of the lino print to go in it, and the
         # size of the border I want around the print
         _paper_width = self.lino.width + (2* inches_to_cm(paper_border_inches))
         _paper_height = self.lino.height + (2* inches_to_cm(paper_border_inches))
         self.paper = RectangleDimensions(width=_paper_width, height=_paper_height)
 
-        # The rectangle that represents the ternes registrations pins   
+        # The rectangle that represents the ternes registrations pins
         self.registration_pin = RectangleDimensions(width=inches_to_cm(1.125), height=inches_to_cm(2.125))
 
 
 def create_layers_for_printing_without_offset_between_layers(
         real_world_objects: RealWorldObjects,
-        extra_space_around_paper_inches=2,
+        extra_space_around_paper_inches=1,
+        hinge_size=inches_to_cm(1),
         circle_radius=inches_to_cm(1/16)):
     _extra_space_around_paper=inches_to_cm(extra_space_around_paper_inches)
 
@@ -132,12 +133,13 @@ def create_layers_for_printing_without_offset_between_layers(
             # Extra space around paper is *2 as it's on both sides
             width=real_world_objects.paper.width + (2*_extra_space_around_paper),
             height=(
-                real_world_objects.paper.height + 
-                (2*_extra_space_around_paper) + 
-                # Want to be able to place the pin on the movable top piece (or the stationary section),                         
+                real_world_objects.paper.height +
+                (2*_extra_space_around_paper) +
+                # Want to be able to place the pin on the movable top piece (or the stationary section),
                 # # with a bit of extra leeway given for the laser cut lines
-                (2*(real_world_objects.registration_pin.height + _extra_vertical_leeway_around_hinge_layer_three))
-            )   
+                (real_world_objects.registration_pin.height + _extra_vertical_leeway_around_hinge_layer_three) +
+                (hinge_size +_extra_vertical_leeway_around_hinge_layer_three)
+            )
         ),
         # The baselayer (layer one) is just the total size, so no offset needed
         Point(0,0)
@@ -169,7 +171,7 @@ def create_layers_for_printing_without_offset_between_layers(
         _layer_two_cutout
         ] + _layer_two_cutout_corner_circles
 
-    # The thrid and top layer with a hinge - where the paper goes. 
+    # The thrid and top layer with a hinge - where the paper goes.
     # Same outside shape, with an only very slightly larger cutout around the lino
     # (just to keep it from interfering), and a line cut near the top to let it fold.
     _layer_three_base = copy.deepcopy(_base_rectangle)
@@ -184,11 +186,12 @@ def create_layers_for_printing_without_offset_between_layers(
             y=_layer_two_cutout.offset.y - (_extra_leeway_around_cutout_layer_three/2)
         )
     )
+    # Set hinge the hinge size (plus a tiny bit of wiggle room) away from the top
     _layer_three_hinge_line = Line(
             start=Point(x=0,
-                        y=(_base_rectangle.rectangle_dimensions.height - (real_world_objects.registration_pin.height + _extra_vertical_leeway_around_hinge_layer_three))),
+                        y=(_base_rectangle.rectangle_dimensions.height - (hinge_size + _extra_vertical_leeway_around_hinge_layer_three))),
             end= Point(x=_base_rectangle.rectangle_dimensions.width,
-                        y= (_base_rectangle.rectangle_dimensions.height - (real_world_objects.registration_pin.height + _extra_vertical_leeway_around_hinge_layer_three)))
+                        y= (_base_rectangle.rectangle_dimensions.height - (hinge_size + _extra_vertical_leeway_around_hinge_layer_three)))
         )
     _layer_three = [
         _layer_three_base,
@@ -205,12 +208,17 @@ def main():
         lino_width_inches=2,
         lino_height_inches=2,
         paper_border_inches=0.5)
-    circle_radius = inches_to_cm(1/16) 
+    circle_radius = inches_to_cm(1/16)
     tiny_extra_offset = inches_to_cm(1/4)
-    extra_space_around_paper_inches=2
+    extra_space_around_paper_inches=1
+    hinge_size= inches_to_cm(1)
     file_name = "test_printing_frame.dxf"
-    printing_frame_split_by_layers= create_layers_for_printing_without_offset_between_layers(real_world_objects, extra_space_around_paper_inches, circle_radius)
-    
+    printing_frame_split_by_layers= create_layers_for_printing_without_offset_between_layers(
+        real_world_objects=real_world_objects,
+        extra_space_around_paper_inches= extra_space_around_paper_inches,
+        hinge_size= hinge_size,
+        circle_radius= circle_radius)
+
     # Add an offset for each layer, and flatten the list of shapes (previously split up by layers) into a list
     printing_frame=[]
     for layer_number, layer in enumerate(printing_frame_split_by_layers):
