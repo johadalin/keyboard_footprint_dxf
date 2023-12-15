@@ -14,13 +14,13 @@ switch_holes = [
     Hole(0, 0, 2),
     Hole(-5.08, 0, 0.85),
     Hole(5.08, 0, 0.85),
-    Hole(2.54, -5.08, 1.25, horizontal_wire=True),
-    Hole(-3.54, -2.60, 1.25, vertical_wire=True),
+    Hole(2.54, -5.08, 1.35, horizontal_wire=True),
+    Hole(-3.54, -2.60, 1.35, vertical_wire=True),
     ]
 
 
 def draw_cable_footprint_matrix(x_origin, y_origin, x_count, y_count, dxf, horizontal=False, vertical=False):
-    channel_width = 1
+    channel_width = 1.2
 
     if horizontal:
         # Find the right hole to target
@@ -34,6 +34,8 @@ def draw_cable_footprint_matrix(x_origin, y_origin, x_count, y_count, dxf, horiz
             y_start = y - channel_width/2
             y_end = y + channel_width/2
             x_start = x_origin + x_offset/2 + hole.x
+            # Override to set channels up to edge
+            x_start = x_origin
             x_end = x_origin + ((x_count-1) * x_offset) + x_offset/2 + hole.x
 
             draw_rectangle(x_start, y_start, (x_end - x_start), (y_end - y_start), dxf)
@@ -50,6 +52,8 @@ def draw_cable_footprint_matrix(x_origin, y_origin, x_count, y_count, dxf, horiz
             x_start = x - channel_width/2
             x_end = x + channel_width/2
             y_start = y_origin + y_offset/2 + hole.y
+            # Override to set channels up to edge
+            y_start = y_origin
             y_end = y_origin + ((y_count-1) * y_offset) + y_offset/2 + hole.y
 
             draw_rectangle(x_start, y_start, (x_end - x_start), (y_end - y_start), dxf)
@@ -88,12 +92,18 @@ def draw_plates(x_count, y_count):
         draw_matrix(x_count, y_count, ox, oy, dxf)
         draw_cable_footprint_matrix(ox, oy, x_count, y_count, dxf, horizontal=True)
 
+        # Draw base
+        ox = x_count * x_offset + 5
+        oy = y_count * y_offset + 5
+        draw_matrix(x_count, y_count, ox, oy, dxf, base=True)
 
-def draw_matrix(x_count, y_count, x_origin, y_origin, dxf):
+
+def draw_matrix(x_count, y_count, x_origin, y_origin, dxf, base=False):
         matrix = [[((x * x_offset) + x_origin, (y * y_offset) + y_origin) for x in range(x_count)] for y in range(y_count)]
-        for row in matrix:
-            for x,y in row:
-                draw_key_footprint(x, y, dxf)
+        if not base:
+            for row in matrix:
+                for x,y in row:
+                    draw_key_footprint(x, y, dxf)
         # draw_rectangle(-x_offset/2,-y_offset/2,x_offset*x_count, y_offset*y_count,dxf)
         draw_rectangle(x_origin, y_origin, x_offset*x_count, y_offset*y_count, dxf)
 
@@ -109,28 +119,4 @@ def draw_single():
 #draw_single()
 #draw_plates(15,15)
 draw_plates(4, 3)
-
-
-
-
-
-
-
-
-  #(pad "" np_thru_hole circle (at 0 0) (size 3.9878 3.9878) (drill 3.9878) (layers *.Cu *.Mask))
-  #(pad "" np_thru_hole circle (at -5.08 0) (size 1.7018 1.7018) (drill 1.7018) (layers *.Cu *.Mask))
-  #(pad "" np_thru_hole circle (at 5.08 0) (size 1.7018 1.7018) (drill 1.7018) (layers *.Cu *.Mask))
-  #(pad 1 thru_hole oval (at -3.255 -3.52 327.5) (size 2.5 4.75) (drill oval 1.5 3.75) (layers *.Cu *.Mask F.SilkS))
-  #(pad 2 thru_hole oval (at 2.52 -4.79 356.1) (size 2.5 3.08) (drill oval 1.5 2.08) (layers *.Cu *.Mask F.SilkS))
-
-
-
-  #(fp_line (start -6.35 -4.572) (end -6.35 -6.35) (layer F.SilkS) (width 0.381))
-  #(fp_line (start -6.35 6.35) (end -6.35 4.572) (layer F.SilkS) (width 0.381))
-  #(fp_line (start -4.572 6.35) (end -6.35 6.35) (layer F.SilkS) (width 0.381))
-  #(fp_line (start 6.35 6.35) (end 4.572 6.35) (layer F.SilkS) (width 0.381))
-  #(fp_line (start 6.35 4.572) (end 6.35 6.35) (layer F.SilkS) (width 0.381))
-  #(fp_line (start 6.35 -6.35) (end 6.35 -4.572) (layer F.SilkS) (width 0.381))
-  #(fp_line (start 4.572 -6.35) (end 6.35 -6.35) (layer F.SilkS) (width 0.381))
-  #(fp_line (start -6.35 -6.35) (end -4.572 -6.35) (layer F.SilkS) (width 0.381))
 
